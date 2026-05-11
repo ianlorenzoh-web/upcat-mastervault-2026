@@ -1,5 +1,5 @@
 /* ================================================================
-   UPCAT 2026 MASTER VAULT — script.js
+   UPCAT 2027 MASTER VAULT — script.js
    Website Idea & Concept by Ian Lorenzo Herico
    ================================================================ */
 
@@ -67,6 +67,11 @@ function showSection(id, navEl) {
   const sec = document.getElementById('sec-' + id);
   if (sec) sec.classList.add('active');
 
+  // re-render section-specific grids so fade-up elements are injected
+  // into a now-visible DOM, ensuring IntersectionObserver fires correctly
+  if (id === 'other-reviewers') renderFolderReviewers();
+  if (id === 'reviewers')       renderReviewers();
+
   // update nav highlight
   if (navEl) {
     navEl.classList.add('active');
@@ -78,13 +83,14 @@ function showSection(id, navEl) {
 
   // update topbar title
   const titles = {
-    dashboard:'Dashboard', reviewers:'Full Reviewers', topics:'Subject Topics',
+    dashboard:'Dashboard', reviewers:'Full Reviewers', 'other-reviewers':'Other Reviewers',
+    topics:'Subject Topics',
     plans:'Study Plans', formulas:'Formula Sheet', tasks:'Task Tracker',
     tips:'Exam Tips', achievements:'Achievements', official:'Official Resources',
     mocks:'Mock Tests & Simulations', upg:'UPG Calculator',
-    guide:'UPCAT Process Guide', settings:'Settings'
+    guide:'UPCAT Process Guide', settings:'Settings', credits:'Credits'
   };
-  document.getElementById('topbar-title').textContent = titles[id] || 'UPCAT 2026 Master Vault';
+  document.getElementById('topbar-title').textContent = titles[id] || 'UPCAT 2027 Master Vault';
 
   // close sidebar on mobile
   if (window.innerWidth <= 768) closeSidebar();
@@ -93,29 +99,51 @@ function showSection(id, navEl) {
   document.querySelector('.content').scrollTop = 0;
   window.scrollTo({ top: 0 });
 
-  // re-run scroll reveal
-  setTimeout(initScrollReveal, 80);
+  // re-run scroll reveal after display:block reflow settles
+  setTimeout(initScrollReveal, 150);
 }
 
 /* ----------------------------------------------------------------
    SIDEBAR MOBILE TOGGLE
    ---------------------------------------------------------------- */
+// Tracks scroll position so we can restore it after closing the sidebar.
+// overflow:hidden on body is broken on iOS Safari — position:fixed is correct.
+let _savedScrollY = 0;
+
 function toggleSidebar() {
   const sb = document.getElementById('sidebar');
   const ov = document.getElementById('overlay');
-  sb.classList.toggle('open');
-  ov.style.display = sb.classList.contains('open') ? 'block' : 'none';
+  const isOpen = sb.classList.toggle('open');
+  ov.style.display = isOpen ? 'block' : 'none';
+  if (isOpen) {
+    // Save current scroll position, then lock the body in place
+    _savedScrollY = window.scrollY;
+    document.body.style.position = 'fixed';
+    document.body.style.top      = `-${_savedScrollY}px`;
+    document.body.style.width    = '100%';
+  } else {
+    // Release the body lock and restore scroll position
+    document.body.style.position = '';
+    document.body.style.top      = '';
+    document.body.style.width    = '';
+    window.scrollTo(0, _savedScrollY);
+  }
 }
 function closeSidebar() {
   document.getElementById('sidebar').classList.remove('open');
   document.getElementById('overlay').style.display = 'none';
+  // Release body lock and restore scroll position
+  document.body.style.position = '';
+  document.body.style.top      = '';
+  document.body.style.width    = '';
+  window.scrollTo(0, _savedScrollY);
 }
 
 /* ----------------------------------------------------------------
    COUNTDOWN — Dynamic (targets August 2026)
    ---------------------------------------------------------------- */
 function updateCountdown() {
-  // UPCAT 2026 typically held in August — use August 1, 2026 as target
+  // UPCAT 2027 is held on August 1–2, 2026 — countdown to Day 1
   const target = new Date('2026-08-01T08:00:00+08:00');
   const now    = new Date();
   const diff   = target - now;
@@ -151,7 +179,7 @@ const quotes = [
   {text:'"It always seems impossible until it\'s done."', author:'— Nelson Mandela'},
   {text:'"Hard work beats talent when talent doesn\'t work hard."', author:'— Tim Notke'},
   {text:'"The difference between ordinary and extraordinary is that little extra."', author:'— Jimmy Johnson'},
-  {text:'"Your dream university is waiting. Every review session brings you closer."', author:'— UPCAT 2026 Vault'},
+  {text:'"Your dream university is waiting. Every review session brings you closer."', author:'— UPCAT 2027 Vault'},
   {text:'"Magsipag ka. Ang tagumpay ay hindi darating sa tamad."', author:'— Filipino Wisdom'},
   {text:'"Ang edukasyon ang tanging kayamanan na hindi maaaring kunin sa iyo."', author:'— Jose Rizal (paraphrased)'},
   {text:'"Don\'t watch the clock; do what it does. Keep going."', author:'— Sam Levenson'},
@@ -194,27 +222,27 @@ function showToast(msg) {
    ---------------------------------------------------------------- */
 const reviewers = [
   {
-    id:'apex', title:'APEX UPCAT Reviewer 2024',
-    cover:'cover-a', emoji:'🚀',
-    desc:'The most comprehensive and up-to-date UPCAT reviewer covering all four subtests with in-depth explanations.',
-    diff:'Hard', time:'25–35 hrs', pages:'~500 pages',
-    tags:['Most Comprehensive','2024 Updated','Best Overall'], cat:'indigo',
-    link:'https://drive.google.com/file/d/1bJmE3B2FP3o8MIjGJZGkIl4iJNjEHoep/view?usp=drivesdk',
-    embedId:'1bJmE3B2FP3o8MIjGJZGkIl4iJNjEHoep'
+    id:'academic_gateway', title:'Academic Gateway',
+    cover:'cover-a', emoji:'🎓',
+    desc:'A comprehensive UPCAT reviewer covering all four subtests with clear explanations and well-structured content for serious aspirants.',
+    diff:'Medium', time:'20–30 hrs', pages:'~400 pages',
+    tags:['All Subjects','Well-Structured','Best for Beginners'], cat:'indigo',
+    link:'https://drive.google.com/file/d/1Cywj8OlSsJhQAfyqHlzegiZVJd2uAxfl/view?usp=drivesdk',
+    embedId:'1Cywj8OlSsJhQAfyqHlzegiZVJd2uAxfl'
   },
   {
-    id:'stp', title:'Science & Technology Philippines',
-    cover:'cover-b', emoji:'🧪',
-    desc:'Science-focused reviewer with excellent coverage of Biology, Chemistry, Physics, and Earth Science with detailed notes.',
-    diff:'Medium', time:'15–20 hrs', pages:'~220 pages',
-    tags:['Science Focus','Detailed Notes','K-12 Aligned'], cat:'emerald',
-    link:'https://drive.google.com/file/d/1RbE9yFpxqJHnjkZ3rG7lW2Tc8EKd5Mkp/view?usp=drivesdk',
-    embedId:'1RbE9yFpxqJHnjkZ3rG7lW2Tc8EKd5Mkp'
+    id:'collegio_advance', title:'Collegio Advance',
+    cover:'cover-b', emoji:'📗',
+    desc:'A solid all-around reviewer with strong coverage of Language Proficiency, Reading Comprehension, and Science topics aligned with K-12.',
+    diff:'Medium', time:'18–25 hrs', pages:'~350 pages',
+    tags:['All Subjects','K-12 Aligned','Language Focus'], cat:'emerald',
+    link:'https://drive.google.com/file/d/13x0wXIVTF6hd0HFBZ9TzcG93qlMjy6cH/view?usp=drivesdk',
+    embedId:'13x0wXIVTF6hd0HFBZ9TzcG93qlMjy6cH'
   },
   {
-    id:'filipinas', title:'Filipinas Reviewer (Classic)',
-    cover:'cover-c', emoji:'🇵🇭',
-    desc:'Classic UPCAT reviewer trusted for decades. Strong Filipino Language and Reading Comprehension coverage.',
+    id:'maroon_bluebook', title:'Maroon Bluebook 4th Edition',
+    cover:'cover-c', emoji:'📘',
+    desc:'The classic community favorite. Trusted for its depth in Filipino Language and Reading Comprehension, with detailed explanations across all subtests.',
     diff:'Medium', time:'30–40 hrs', pages:'~400 pages',
     tags:['Classic','Explanation-rich','Most Popular'], cat:'amber',
     link:'https://drive.google.com/file/d/1sCGl08sFqNEFNNEoBXoAliL2HvMM4E0q/view?usp=drivesdk',
@@ -223,9 +251,9 @@ const reviewers = [
   {
     id:'msa', title:'MSA 2024',
     cover:'cover-d', emoji:'🔬',
-    desc:'Latest 2024 reviewer aligned with the modern K-12 curriculum. Science and Math heavy with fully updated content.',
+    desc:'Latest 2024 reviewer aligned with the modern K-12 curriculum. Science and Math heavy with fully updated content and practice sets.',
     diff:'Medium', time:'20–28 hrs', pages:'~290 pages',
-    tags:['2024 Updated','K-12 Aligned','Science Focus'], cat:'indigo',
+    tags:['2024 Updated','K-12 Aligned','Science & Math Focus'], cat:'indigo',
     link:'https://drive.google.com/file/d/1MhXc23EWEopBWVE_c-qCN2rz-vS3gidW/view?usp=drivesdk',
     embedId:'1MhXc23EWEopBWVE_c-qCN2rz-vS3gidW'
   },
@@ -304,6 +332,88 @@ function toggleBookmark(id) {
 }
 
 /* ----------------------------------------------------------------
+   FOLDER REVIEWERS — Other Personally Trusted Reviewers
+   These link to Google Drive folders (not embeddable PDFs),
+   so they use a folder-specific card layout.
+   ---------------------------------------------------------------- */
+const folderReviewers = [
+  {
+    id:'jahjah_cet',
+    title:'Jahjah\'s Super Duper Ultra Mega CET Reviewers',
+    cover:'cover-folder-a', emoji:'📂',
+    desc:'A massive collection of CET reviewer materials personally curated and compiled. Covers a wide range of subjects useful for UPCAT preparation.',
+    tags:['Folder Collection','Multi-Subject','Community Pick'], cat:'cyan',
+    credit:'Reviewer collection by Jahjah',
+    link:'https://drive.google.com/drive/folders/1uBMGBJVbp6bqM7jwLr5yEI-jaoV823jA',
+  },
+];
+
+function renderFolderReviewers() {
+  if (!state.reviewerDone)       state.reviewerDone       = {};
+  if (!state.reviewerBookmarks)  state.reviewerBookmarks  = {};
+  const grid = document.getElementById('folder-reviewer-grid');
+  if (!grid) return;
+  grid.innerHTML = folderReviewers.map(r => {
+    const done = state.reviewerDone[r.id];
+    const bkm  = state.reviewerBookmarks[r.id];
+    const catClass = r.cat === 'emerald' ? 't-emerald'
+                   : r.cat === 'amber'   ? 't-amber'
+                   : r.cat === 'cyan'    ? 't-cyan'
+                   : 't-indigo';
+    return `
+    <div class="reviewer-card fade-up" role="article" aria-label="${r.title}">
+      <div class="reviewer-cover ${r.cover}">
+        <div class="cover-overlay"></div>
+        <div class="reviewer-cover-emoji">${r.emoji}</div>
+      </div>
+      <div class="reviewer-body">
+        <div class="reviewer-title">${r.title}</div>
+        <div class="reviewer-desc">${r.desc}</div>
+        <div class="tags">${r.tags.map(t => `<span class="tag ${catClass}">${t}</span>`).join('')}</div>
+        <div class="reviewer-credit">
+          <i class="fas fa-user-circle" style="margin-right:5px;opacity:0.7;"></i>${r.credit}
+        </div>
+        <div class="progress-label"><span>Completion</span><span>${done ? '100' : '0'}%</span></div>
+        <div class="progress-track" style="margin-bottom:14px;">
+          <div class="progress-fill" style="width:${done ? '100' : '0'}%"></div>
+        </div>
+        <div class="btn-row">
+          <a href="${r.link}" target="_blank" rel="noopener noreferrer"
+             class="btn btn-primary" style="flex:1;justify-content:center;text-decoration:none;"
+             aria-label="Open ${r.title} in Google Drive">
+            <i class="fas fa-folder-open"></i> Open Folder
+          </a>
+          <button class="btn ${bkm ? 'btn-primary' : 'btn-secondary'}"
+                  onclick="toggleFolderBookmark('${r.id}')" title="Bookmark" aria-label="Bookmark ${r.title}">
+            <i class="fas fa-bookmark" style="${bkm ? 'color:#fbbf24' : ''}"></i>
+          </button>
+          <button class="btn ${done ? 'btn-success' : 'btn-secondary'}"
+                  onclick="toggleFolderReviewer('${r.id}')" title="${done ? 'Mark incomplete' : 'Mark complete'}"
+                  aria-label="${done ? 'Mark incomplete' : 'Mark complete'}">
+            <i class="fas ${done ? 'fa-check-circle' : 'fa-circle'}"></i>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  initScrollReveal();
+}
+
+function toggleFolderReviewer(id) {
+  if (!state.reviewerDone) state.reviewerDone = {};
+  state.reviewerDone[id] = !state.reviewerDone[id];
+  saveState(); renderFolderReviewers(); updateDashboardStats();
+  showToast(state.reviewerDone[id] ? '📂 Folder reviewer marked as complete! +50 XP' : 'Reviewer unmarked.');
+}
+
+function toggleFolderBookmark(id) {
+  if (!state.reviewerBookmarks) state.reviewerBookmarks = {};
+  state.reviewerBookmarks[id] = !state.reviewerBookmarks[id];
+  saveState(); renderFolderReviewers();
+  showToast(state.reviewerBookmarks[id] ? '🔖 Reviewer bookmarked!' : 'Bookmark removed.');
+}
+
+/* ----------------------------------------------------------------
    SUBJECTS / TOPICS
    ---------------------------------------------------------------- */
 const subjects = [
@@ -337,9 +447,15 @@ function renderTopics() {
       </div>
       <div class="subject-body">
         ${s.topics.map(t => {
-          const key = s.id+'::'+t;
-          const isDone = !!state.topics[key];
-          return `<div class="topic-item ${isDone?'done':''}" onclick="toggleTopic('${key}')">
+          /* Fix #4 & #9: Use a data attribute instead of injecting the raw key
+             string into an onclick="..." attribute. This is safe for ANY topic
+             name including those with apostrophes (Earth's Interior), quotes,
+             or any other special characters. */
+          const key     = s.id + '::' + t;
+          const isDone  = !!state.topics[key];
+          // Escape the key for safe placement in a data-* attribute value
+          const safeKey = key.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+          return `<div class="topic-item ${isDone?'done':''}" data-topic-key="${safeKey}">
             <div class="topic-check">${isDone?'✓':''}</div>
             <span class="topic-name">${t}</span>
           </div>`;
@@ -356,6 +472,20 @@ function toggleTopic(key) {
   saveState(); renderTopics(); updateDashboardStats();
   showToast(state.topics[key] ? '✅ Topic checked! +10 XP' : 'Topic unchecked.');
 }
+
+/* Fix #9: Single delegated click listener on the topics container.
+   Handles ALL topic items — no matter what characters are in the topic
+   name — by reading the key from the element's dataset instead of
+   evaluating an inline JS string. Attached once at DOMContentLoaded. */
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('topics-container');
+  if (container) {
+    container.addEventListener('click', e => {
+      const item = e.target.closest('.topic-item[data-topic-key]');
+      if (item) toggleTopic(item.dataset.topicKey);
+    });
+  }
+});
 
 /* ----------------------------------------------------------------
    STUDY PLANS
@@ -801,22 +931,87 @@ function handleSearch(val) {
 }
 
 /* ----------------------------------------------------------------
-   POMODORO TIMER
+   NOTIFICATION & ALERT SYSTEM
+   Fire once on timer completion: browser notification + beep + toast + vibration.
+   ---------------------------------------------------------------- */
+function requestNotifPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    Notification.requestPermission();
+  }
+}
+
+function fireTimerAlert(title, body) {
+  // 1. Browser notification (if permitted)
+  if ('Notification' in window && Notification.permission === 'granted') {
+    try { new Notification(title, { body, icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏰</text></svg>' }); } catch(e) {}
+  }
+  // 2. Web Audio beep — two-tone chime, no external files needed
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    [[880, 0, 0.18], [1100, 0.2, 0.18], [880, 0.42, 0.25]].forEach(([freq, start, dur]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'sine'; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + start);
+      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + start + 0.02);
+      gain.gain.linearRampToValueAtTime(0, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.05);
+    });
+    setTimeout(() => ctx.close(), 1000);
+  } catch(e) {}
+  // 3. Toast
+  showToast(`${title} — ${body}`);
+  // 4. Vibration (Android; iOS ignores silently)
+  if ('vibrate' in navigator) navigator.vibrate([200, 100, 200, 100, 400]);
+}
+
+/* ----------------------------------------------------------------
+   POMODORO TIMER — Enhanced with custom time input
    ---------------------------------------------------------------- */
 let pomoRunning=false, pomoTime=25*60, pomoTotal=25*60, pomoInterval=null, pomoMode='work';
+
+/* Set custom duration from the hrs/min inputs */
+function setCustomPomo() {
+  const hrs = parseInt(document.getElementById('pomo-hrs-input').value) || 0;
+  const min = parseInt(document.getElementById('pomo-min-input').value) || 0;
+  const totalSec = (hrs * 3600) + (min * 60);
+  if (totalSec < 60) { showToast('⚠️ Please set at least 1 minute.'); return; }
+  // Always clear before reassigning — prevents interval leak
+  clearInterval(pomoInterval); pomoInterval=null; pomoRunning=false;
+  pomoTime = totalSec; pomoTotal = totalSec; pomoMode='work';
+  document.getElementById('pomo-start').textContent='Start';
+  document.getElementById('pomo-mode-label').textContent = 'CUSTOM FOCUS SESSION';
+  updatePomoDisplay();
+  showToast(`⏱ Timer set to ${hrs?hrs+'h ':''}${min}m`);
+}
+
 function togglePomo() {
   if (pomoRunning) {
-    clearInterval(pomoInterval); pomoRunning=false;
+    // Pause: clear interval, null it out to prevent stale ref leak
+    clearInterval(pomoInterval); pomoInterval=null; pomoRunning=false;
     document.getElementById('pomo-start').textContent='Resume';
   } else {
+    // Guard: never start a second interval if one somehow exists
+    if (pomoInterval) { clearInterval(pomoInterval); pomoInterval=null; }
     pomoRunning=true;
+    // Request notification permission on first start
+    requestNotifPermission();
     document.getElementById('pomo-start').textContent='Pause';
     pomoInterval=setInterval(()=>{
       pomoTime--;
       if (pomoTime<=0) {
-        clearInterval(pomoInterval); pomoRunning=false;
-        if(pomoMode==='work'){showToast('✅ Focus session done! Take a 5-min break.');pomoMode='break';pomoTime=5*60;pomoTotal=5*60;}
-        else{showToast('🔋 Break done! Time to focus.');pomoMode='work';pomoTime=25*60;pomoTotal=25*60;}
+        clearInterval(pomoInterval); pomoInterval=null; pomoRunning=false;
+        if(pomoMode==='work'){
+          fireTimerAlert('✅ Focus Session Complete', 'Great work! Take a 5-minute break.');
+          pomoMode='break'; pomoTime=5*60; pomoTotal=5*60;
+          document.getElementById('pomo-mode-label').textContent='BREAK TIME';
+        } else {
+          fireTimerAlert('🔋 Break Over', 'Time to focus again!');
+          pomoMode='work'; pomoTime=25*60; pomoTotal=25*60;
+          document.getElementById('pomo-mode-label').textContent='FOCUS SESSION';
+        }
         document.getElementById('pomo-start').textContent='Start';
       }
       updatePomoDisplay();
@@ -824,17 +1019,131 @@ function togglePomo() {
   }
 }
 function resetPomo() {
-  clearInterval(pomoInterval); pomoRunning=false;
+  clearInterval(pomoInterval); pomoInterval=null; pomoRunning=false;
   pomoTime=25*60; pomoTotal=25*60; pomoMode='work';
   document.getElementById('pomo-start').textContent='Start';
+  if(document.getElementById('pomo-mode-label'))
+    document.getElementById('pomo-mode-label').textContent='FOCUS SESSION';
   updatePomoDisplay();
 }
 function updatePomoDisplay() {
-  const m=String(Math.floor(pomoTime/60)).padStart(2,'0');
+  const h=Math.floor(pomoTime/3600);
+  const m=String(Math.floor((pomoTime%3600)/60)).padStart(2,'0');
   const s=String(pomoTime%60).padStart(2,'0');
-  document.getElementById('pomo-display').textContent=`${m}:${s}`;
+  document.getElementById('pomo-display').textContent = h ? `${h}:${m}:${s}` : `${m}:${s}`;
   const offset=408-(408*(pomoTotal-pomoTime)/pomoTotal);
   document.getElementById('pomo-circle').style.strokeDashoffset=offset;
+}
+
+/* ----------------------------------------------------------------
+   CUSTOM TIMERS — Independent named countdown timers
+   ---------------------------------------------------------------- */
+const customTimers = []; // {id, name, total, remaining, running, interval}
+
+function addCustomTimer() {
+  const name = document.getElementById('ct-name-input').value.trim() || 'Timer';
+  const hrs  = parseInt(document.getElementById('ct-hrs-input').value) || 0;
+  const min  = parseInt(document.getElementById('ct-min-input').value) || 0;
+  const totalSec = (hrs * 3600) + (min * 60);
+  if (totalSec < 60) { showToast('⚠️ Please set at least 1 minute for the custom timer.'); return; }
+  const id = Date.now();
+  customTimers.push({ id, name, total: totalSec, remaining: totalSec, running: false, interval: null });
+  document.getElementById('ct-name-input').value = '';
+  document.getElementById('ct-hrs-input').value  = '';
+  document.getElementById('ct-min-input').value  = '';
+  renderCustomTimers();
+  showToast(`⏲ "${name}" timer added!`);
+}
+
+function toggleCustomTimer(id) {
+  const t = customTimers.find(t=>t.id===id);
+  if (!t || t.remaining<=0) return;
+  if (t.running) {
+    clearInterval(t.interval); t.interval=null; t.running=false;
+  } else {
+    // Guard: clear any stale interval ref before starting
+    if (t.interval) { clearInterval(t.interval); t.interval=null; }
+    t.running=true;
+    // Request notification permission on first timer start
+    requestNotifPermission();
+    t.interval=setInterval(()=>{
+      t.remaining--;
+      if (t.remaining<=0) {
+        clearInterval(t.interval); t.interval=null; t.running=false; t.remaining=0;
+        fireTimerAlert(`⏰ "${t.name}" Done!`, 'Your timer has finished.');
+      }
+      renderCustomTimers();
+    },1000);
+  }
+  renderCustomTimers();
+}
+
+function resetCustomTimer(id) {
+  const t = customTimers.find(t=>t.id===id);
+  if (!t) return;
+  clearInterval(t.interval); t.running=false; t.remaining=t.total;
+  renderCustomTimers();
+}
+
+function deleteCustomTimer(id) {
+  const idx = customTimers.findIndex(t=>t.id===id);
+  if (idx<0) return;
+  clearInterval(customTimers[idx].interval);
+  customTimers.splice(idx,1);
+  renderCustomTimers();
+}
+
+function fmtTime(sec) {
+  const h=Math.floor(sec/3600);
+  const m=String(Math.floor((sec%3600)/60)).padStart(2,'0');
+  const s=String(sec%60).padStart(2,'0');
+  return h ? `${h}:${m}:${s}` : `${m}:${s}`;
+}
+
+function renderCustomTimers() {
+  const list = document.getElementById('custom-timer-list');
+  if (!list) return;
+  if (customTimers.length===0) {
+    list.innerHTML = '<div style="font-size:0.78rem;color:var(--text-muted);padding:10px 0;">No custom timers yet. Add one above!</div>';
+    return;
+  }
+  list.innerHTML = customTimers.map(t=>{
+    const pct = t.total > 0 ? ((t.total-t.remaining)/t.total) : 1;
+    const r=36; const circ=2*Math.PI*r;
+    const dash=circ; const offset=circ*pct;
+    const status = t.remaining<=0 ? 'Done!' : t.running ? 'Running…' : 'Paused';
+    return `
+    <div class="custom-timer-card">
+      <div class="custom-timer-svg-wrap">
+        <svg width="80" height="80" viewBox="0 0 80 80">
+          <circle cx="40" cy="40" r="${r}" fill="none" stroke="var(--glass-border)" stroke-width="4"/>
+          <circle cx="40" cy="40" r="${r}" fill="none"
+            stroke="url(#ctGrad${t.id})" stroke-width="4"
+            stroke-dasharray="${circ}" stroke-dashoffset="${dash-offset}"
+            stroke-linecap="round" transform="rotate(-90 40 40)"
+            style="transition:stroke-dashoffset 0.8s ease;"/>
+          <defs>
+            <linearGradient id="ctGrad${t.id}" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#6366f1"/>
+              <stop offset="100%" stop-color="#06b6d4"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="custom-timer-display">${fmtTime(t.remaining)}</div>
+      </div>
+      <div class="custom-timer-info">
+        <div class="custom-timer-name">${t.name}</div>
+        <div class="custom-timer-status">${status} · Total: ${fmtTime(t.total)}</div>
+      </div>
+      <div class="custom-timer-btns">
+        <button class="custom-timer-btn ctb-start" onclick="toggleCustomTimer(${t.id})">
+          ${t.running ? 'Pause' : t.remaining<=0 ? 'Done' : 'Start'}
+        </button>
+        <button class="custom-timer-btn ctb-reset" onclick="resetCustomTimer(${t.id})">Reset</button>
+        <button class="custom-timer-btn ctb-delete" onclick="deleteCustomTimer(${t.id})"><i class="fas fa-trash"></i></button>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 /* ----------------------------------------------------------------
@@ -894,8 +1203,139 @@ function initScrollReveal() {
 }
 
 /* ----------------------------------------------------------------
-   RESET DATA
+   TOTAL VISIT COUNTER — counterapi.dev
+   Free, no-signup persistent hit counter. Increments once per
+   browser session and displays the all-time total.
+   Falls back silently if the API is unreachable.
    ---------------------------------------------------------------- */
+const _COUNTER_ID = 'upcat-master-vault-2027';
+
+async function initTotalVisitCounter() {
+  const el = document.getElementById('total-visit-count');
+  if (!el) return;
+
+  // Only increment once per browser session to avoid inflation on
+  // in-page navigation or hot-reloads.
+  if (sessionStorage.getItem('upcat_visit_counted')) {
+    try {
+      const res  = await fetch(`https://api.counterapi.dev/v1/${_COUNTER_ID}/get`);
+      const data = await res.json();
+      if (typeof data.count === 'number') el.textContent = data.count.toLocaleString();
+    } catch(e) { el.textContent = '—'; }
+    return;
+  }
+
+  try {
+    const res  = await fetch(`https://api.counterapi.dev/v1/${_COUNTER_ID}/up`);
+    const data = await res.json();
+    if (typeof data.count === 'number') {
+      el.textContent = data.count.toLocaleString();
+      sessionStorage.setItem('upcat_visit_counted', '1');
+    }
+  } catch(e) {
+    el.textContent = '—';
+  }
+}
+
+/* ----------------------------------------------------------------
+   LIVE VISITOR COUNTER — BroadcastChannel + localStorage
+   Works across tabs in the same browser. Honest about its scope:
+   this tracks open tabs, not unique internet users. No backend needed.
+   ---------------------------------------------------------------- */
+const PRESENCE_KEY  = 'upcat_presence_v1';
+const PRESENCE_TTL  = 8000;   // ms — tab considered alive if heartbeat < 8s old
+const HEARTBEAT_INT = 4000;   // ms — how often each tab writes its heartbeat
+const _tabId = `tab_${Date.now()}_${Math.random().toString(36).slice(2,7)}`;
+let _presenceChannel = null;
+let _heartbeatTimer  = null;
+
+function _writeHeartbeat() {
+  try {
+    const now = Date.now();
+    const data = JSON.parse(localStorage.getItem(PRESENCE_KEY) || '{}');
+    // Write this tab's timestamp
+    data[_tabId] = now;
+    // Evict stale tabs (no heartbeat for > TTL)
+    Object.keys(data).forEach(k => { if (now - data[k] > PRESENCE_TTL) delete data[k]; });
+    localStorage.setItem(PRESENCE_KEY, JSON.stringify(data));
+    _updateCounterUI(Object.keys(data).length);
+  } catch(e) {}
+}
+
+function _removeHeartbeat() {
+  try {
+    const data = JSON.parse(localStorage.getItem(PRESENCE_KEY) || '{}');
+    delete data[_tabId];
+    localStorage.setItem(PRESENCE_KEY, JSON.stringify(data));
+    if (_presenceChannel) _presenceChannel.postMessage('update');
+  } catch(e) {}
+}
+
+function _updateCounterUI(count) {
+  const el = document.getElementById('visitor-count');
+  if (el) el.textContent = count;
+  const label = document.getElementById('visitor-label');
+  if (label) label.textContent = count === 1 ? 'student studying now' : 'students studying now';
+}
+
+function initPresence() {
+  // Immediately write heartbeat
+  _writeHeartbeat();
+  // Repeat heartbeat every 4s to stay "alive"
+  _heartbeatTimer = setInterval(() => {
+    _writeHeartbeat();
+    if (_presenceChannel) _presenceChannel.postMessage('update');
+  }, HEARTBEAT_INT);
+
+  // BroadcastChannel: receive updates from other tabs instantly
+  if ('BroadcastChannel' in window) {
+    _presenceChannel = new BroadcastChannel('upcat_presence');
+    _presenceChannel.onmessage = () => {
+      try {
+        const now = Date.now();
+        const data = JSON.parse(localStorage.getItem(PRESENCE_KEY) || '{}');
+        const live = Object.values(data).filter(ts => now - ts <= PRESENCE_TTL).length;
+        _updateCounterUI(live);
+      } catch(e) {}
+    };
+  }
+
+  // Also listen for storage events (cross-tab on browsers that don't support BroadcastChannel)
+  window.addEventListener('storage', (e) => {
+    if (e.key === PRESENCE_KEY) {
+      try {
+        const now = Date.now();
+        const data = JSON.parse(e.newValue || '{}');
+        const live = Object.values(data).filter(ts => now - ts <= PRESENCE_TTL).length;
+        _updateCounterUI(live);
+      } catch(e2) {}
+    }
+  });
+
+  // Cleanup on tab close / navigation away
+  window.addEventListener('beforeunload', () => {
+    clearInterval(_heartbeatTimer);
+    _removeHeartbeat();
+    if (_presenceChannel) { _presenceChannel.close(); _presenceChannel = null; }
+  });
+
+  // Also cleanup on visibility change (mobile app-switch, screen lock)
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      clearInterval(_heartbeatTimer);
+      _heartbeatTimer = null;
+    } else {
+      // Tab is visible again — resume heartbeat
+      _writeHeartbeat();
+      _heartbeatTimer = setInterval(() => {
+        _writeHeartbeat();
+        if (_presenceChannel) _presenceChannel.postMessage('update');
+      }, HEARTBEAT_INT);
+    }
+  });
+}
+
+
 function resetData() {
   if (confirm('Are you sure you want to reset all progress? This cannot be undone.')) {
     localStorage.removeItem('upcat_state_v4');
@@ -913,6 +1353,7 @@ function initAll() {
   setRandomQuote();
   updateCountdown();
   renderReviewers();
+  renderFolderReviewers();
   renderTopics();
   renderPlans();
   renderFormulas();
@@ -923,5 +1364,8 @@ function initAll() {
   renderSimulations();
   updateDashboardStats();
   updatePomoDisplay();
+  renderCustomTimers();
+  initPresence();
+  initTotalVisitCounter();
   setTimeout(initScrollReveal, 300);
 }
